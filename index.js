@@ -23,6 +23,7 @@ async function run() {
         const database = client.db("taarzan");
         const reviewsCollection = database.collection("reviews");
         const carsCollection = database.collection("cars");
+        const allOrdersCollection = database.collection("allOrders");
 
         ////////////////////////
         // CARS API HANDLING //
@@ -40,6 +41,12 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const cars = await carsCollection.findOne(query);
             res.send(cars);
+        })
+        // POST CAR DATA
+        app.post('/cars', async (req, res) => {
+            const car = req.body;
+            const result = await carsCollection.insertOne(car);
+            res.json(result);
         })
 
         /////////////////////////////////
@@ -61,6 +68,47 @@ async function run() {
             res.json(result);
         })
         //////////////////////////////////
+
+        //////////////////////////////
+        // ALL ORDERS API HANDLING //
+        ////////////////////////////
+
+        // GETTING ORDERS
+        app.get('/allOrders', async (req, res) => {
+            const cursor = allOrdersCollection.find({});
+            const allOrders = await cursor.toArray();
+            res.send(allOrders);
+        })
+
+        // POSTING ORDERS
+        app.post('/allOrders', async (req, res) => {
+            const allOrders = req.body;
+            const result = await allOrdersCollection.insertOne(allOrders);
+            res.json(result);
+        })
+        // UPDATING ALL ORDERS
+        app.put('/allOrders/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedAllOrders = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: updatedAllOrders.status,
+                },
+            };
+            const result = await allOrdersCollection.updateOne(filter, updateDoc, options)
+            res.json(result)
+        })
+        // DELETING AN ORDER
+        app.delete('/allOrders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await allOrdersCollection.deleteOne(query);
+            res.json(result);
+        })
+
+        ///////////////////////////////////////
     }
     finally {
         // await client.close();
